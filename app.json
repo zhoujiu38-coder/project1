@@ -6,7 +6,10 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#050505",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon-build.png",
+    "splash": {
+      "backgroundColor": "#050505"
+    },
     "androidStatusBar": {
       "backgroundColor": "#050505",
       "barStyle": "light-content",
@@ -19,7 +22,7 @@
     "android": {
       "package": "com.zhoujiu38.personalgrowthdesk",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/adaptive-icon-build.png",
         "backgroundColor": "#000000"
       }
     },
