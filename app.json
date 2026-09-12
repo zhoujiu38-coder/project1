@@ -7,6 +7,15 @@
     "userInterfaceStyle": "dark",
     "backgroundColor": "#050505",
     "icon": "./assets/icon.png",
+    "androidStatusBar": {
+      "backgroundColor": "#050505",
+      "barStyle": "light-content",
+      "translucent": false
+    },
+    "androidNavigationBar": {
+      "backgroundColor": "#050505",
+      "barStyle": "light-content"
+    },
     "android": {
       "package": "com.zhoujiu38.personalgrowthdesk",
       "adaptiveIcon": {
