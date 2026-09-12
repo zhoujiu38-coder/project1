@@ -12,7 +12,7 @@ permissions:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -32,6 +32,15 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Generate Expo-compatible launcher icons
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq imagemagick
+          convert -background none assets/icon-source.svg -resize 1024x1024\! -alpha on -define png:color-type=6 -define png:compression-filter=0 -define png:compression-level=6 PNG32:assets/icon-build.png
+          cp assets/icon-build.png assets/adaptive-icon-build.png
+          file assets/icon-build.png
+          identify assets/icon-build.png
+
       - name: Apply compact safe-layout dark-gold UI
         run: node scripts/apply-responsive-dark-gold.js
 
@@ -44,7 +53,9 @@ jobs:
         run: npm run typecheck
 
       - name: Generate Android project
-        run: npx expo prebuild --platform android --non-interactive --clean
+        env:
+          CI: 1
+        run: npx expo prebuild --platform android --clean
 
       - name: Build standalone release APK
         env:
