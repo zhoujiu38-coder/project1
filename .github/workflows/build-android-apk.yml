@@ -32,6 +32,11 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Normalize React Native font weights
+        run: |
+          sed -i "s/fontWeight: '650'/fontWeight: '600'/g" App.tsx
+          sed -i "s/fontWeight: '750'/fontWeight: '700'/g" App.tsx
+
       - name: Type check
         run: npm run typecheck
 
