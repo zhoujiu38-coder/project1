@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Apply responsive dark-gold UI
+        run: node scripts/apply-responsive-dark-gold.js
+
       - name: Normalize React Native font weights
         run: |
           sed -i "s/fontWeight: '650'/fontWeight: '600'/g" App.tsx
@@ -59,12 +62,12 @@ jobs:
       - name: Prepare APK
         run: |
           mkdir -p dist
-          cp android/app/build/outputs/apk/release/app-release.apk dist/PersonalGrowthDesk-v1.0.1-release.apk
+          cp android/app/build/outputs/apk/release/app-release.apk dist/Qi-v1.0.2-dark-gold-release.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PersonalGrowthDesk-v1.0.1-release-apk
-          path: dist/PersonalGrowthDesk-v1.0.1-release.apk
+          name: Qi-v1.0.2-dark-gold-release-apk
+          path: dist/Qi-v1.0.2-dark-gold-release.apk
           if-no-files-found: error
           retention-days: 30
