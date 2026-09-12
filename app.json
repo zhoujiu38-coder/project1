@@ -1,14 +1,15 @@
 {
   "expo": {
-    "name": "个人成长工作台",
-    "slug": "personal-growth-desk",
-    "version": "1.0.0",
+    "name": "栖",
+    "slug": "qi-personal-growth",
+    "version": "1.0.2",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
+    "backgroundColor": "#090806",
     "android": {
       "package": "com.zhoujiu38.personalgrowthdesk",
       "adaptiveIcon": {
-        "backgroundColor": "#0B0E13"
+        "backgroundColor": "#090806"
       }
     },
     "ios": {
