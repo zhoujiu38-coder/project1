@@ -2,14 +2,16 @@
   "expo": {
     "name": "栖",
     "slug": "qi-personal-growth",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
-    "backgroundColor": "#090806",
+    "backgroundColor": "#050505",
+    "icon": "./assets/icon.png",
     "android": {
       "package": "com.zhoujiu38.personalgrowthdesk",
       "adaptiveIcon": {
-        "backgroundColor": "#090806"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
       }
     },
     "ios": {
