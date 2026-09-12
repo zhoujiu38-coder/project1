@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "个人成长工作台",
+    "slug": "personal-growth-desk",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "android": {
+      "package": "com.zhoujiu38.personalgrowthdesk",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0E13"
+      }
+    },
+    "ios": {
+      "supportsTablet": true
+    }
+  }
+}
