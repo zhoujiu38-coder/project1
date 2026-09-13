@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "栖",
+    "slug": "qi-personal-growth",
+    "version": "1.0.4",
+    "orientation": "default",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#050505",
+    "icon": "./assets/icon-build.png",
+    "splash": {
+      "backgroundColor": "#050505"
+    },
+    "androidStatusBar": {
+      "backgroundColor": "#050505",
+      "barStyle": "light-content",
+      "translucent": false
+    },
+    "androidNavigationBar": {
+      "backgroundColor": "#050505",
+      "barStyle": "light-content"
+    },
+    "android": {
+      "package": "com.zhoujiu38.personalgrowthdesk",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon-build.png",
+        "backgroundColor": "#000000"
+      },
+      "versionCode": 4,
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "ios": {
+      "supportsTablet": true
+    }
+  }
+}

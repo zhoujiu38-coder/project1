@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="75%">
+      <stop offset="0" stop-color="#090806"/>
+      <stop offset="1" stop-color="#000000"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="22%" y1="15%" x2="78%" y2="85%">
+      <stop offset="0" stop-color="#FFF1BE"/>
+      <stop offset="0.24" stop-color="#E7C275"/>
+      <stop offset="0.52" stop-color="#B98435"/>
+      <stop offset="0.72" stop-color="#E4B862"/>
+      <stop offset="1" stop-color="#8E6223"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="13" result="blur"/>
+      <feFlood flood-color="#C9933B" flood-opacity="0.35"/>
+      <feComposite in2="blur" operator="in"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <path d="M512 214 C535 382 642 489 810 512 C642 535 535 642 512 810 C489 642 382 535 214 512 C382 489 489 382 512 214 Z" fill="#B98738" opacity="0.34" filter="url(#glow)"/>
+  <path d="M512 230 C532 390 634 492 794 512 C634 532 532 634 512 794 C492 634 390 532 230 512 C390 492 492 390 512 230 Z" fill="url(#gold)"/>
+  <path d="M512 230 C516 390 516 469 512 512 C508 469 508 390 512 230 Z" fill="#FFF4C8" opacity="0.5"/>
+  <path d="M230 512 C390 508 469 508 512 512 C469 516 390 516 230 512 Z" fill="#F5D58D" opacity="0.35"/>
+</svg>

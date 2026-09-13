@@ -1,0 +1,79 @@
+name: Build Android Release APK
+
+on:
+  push:
+    branches:
+      - feat/personal-growth-desk-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Generate Expo-compatible launcher icons
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq imagemagick
+          convert -background none assets/icon-source.svg -resize 1024x1024\! -alpha on -define png:color-type=6 -define png:compression-filter=0 -define png:compression-level=6 PNG32:assets/icon-build.png
+          cp assets/icon-build.png assets/adaptive-icon-build.png
+          file assets/icon-build.png
+          identify assets/icon-build.png
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Test responsive layout
+        run: node scripts/test-layout.cjs
+
+      - name: Generate Android project
+        env:
+          CI: 1
+        run: npx expo prebuild --platform android --clean
+
+      - name: Build standalone release APK
+        env:
+          NODE_ENV: production
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Verify bundled JavaScript exists
+        run: |
+          test -f android/app/build/generated/assets/createBundleReleaseJsAndAssets/index.android.bundle
+          ls -lh android/app/build/generated/assets/createBundleReleaseJsAndAssets/index.android.bundle
+
+      - name: Prepare APK
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/release/app-release.apk dist/Qi-v1.0.4-responsive-release.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Qi-v1.0.4-responsive-release-apk
+          path: dist/Qi-v1.0.4-responsive-release.apk
+          if-no-files-found: error
+          retention-days: 30
