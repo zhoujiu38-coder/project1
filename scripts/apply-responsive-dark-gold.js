@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 const file = 'App.tsx';
-let s = fs.readFileSync(file, 'utf8');
+let s = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
 
 function mustReplace(from, to, label) {
   if (!s.includes(from)) throw new Error(`UI patch failed: ${label}`);
@@ -27,8 +27,8 @@ mustReplace(
 );
 
 mustReplace(
-  "      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>",
-  "      <ScrollView contentContainerStyle={[styles.content, { paddingHorizontal: horizontalPadding, width: '100%', maxWidth: contentMaxWidth, alignSelf: 'center' }]} showsVerticalScrollIndicator={false}>",
+  "      <ScrollView key={page} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps=\"handled\">",
+  "      <ScrollView key={page} contentContainerStyle={[styles.content, { paddingHorizontal: horizontalPadding, width: '100%', maxWidth: contentMaxWidth, alignSelf: 'center' }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps=\"handled\">",
   'responsive content'
 );
 

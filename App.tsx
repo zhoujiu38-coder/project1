@@ -214,7 +214,18 @@ export default function App() {
         <View style={styles.progressPill}><Text style={styles.progressPillText}>{completion}%</Text></View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView key={page} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        {page !== 'home' && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="返回首页"
+            onPress={() => navigate('home')}
+            style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={20} color={C.accent} style={styles.backIcon} />
+            <Text style={styles.backButtonText}>返回首页</Text>
+          </Pressable>
+        )}
         {page === 'home' && <Home daily={daily} completion={completion} quotes={quotePool} onOpen={navigate} speak={speak} />}
         {page === 'fitness' && <Fitness daily={daily} setDaily={setDaily} onMotivate={setMotivation} />}
         {page === 'study' && <Study daily={daily} setDaily={setDaily} onMotivate={setMotivation} />}
@@ -348,6 +359,10 @@ function Review({ daily, setDaily }: { daily: DailyState; setDaily: React.Dispat
 }
 
 const styles = StyleSheet.create({
+  backButton: { alignSelf: 'flex-start', maxWidth: '100%', minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 14, borderRadius: 12, backgroundColor: C.panel2, borderWidth: 1, borderColor: C.border },
+  backButtonPressed: { opacity: 0.7 },
+  backIcon: { flexShrink: 0 },
+  backButtonText: { color: C.accent, fontSize: 14, fontWeight: '700', flexShrink: 1 },
   root: { flex: 1, backgroundColor: C.bg },
   topbar: { height: 68, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: C.border },
   iconButton: { width: 40, height: 40, borderRadius: 12, backgroundColor: C.panel2, alignItems: 'center', justifyContent: 'center' },
@@ -363,13 +378,13 @@ const styles = StyleSheet.create({
   input: { minHeight: 50, borderRadius: 14, backgroundColor: C.panel2, borderWidth: 1, borderColor: C.border, color: C.text, paddingHorizontal: 14, marginBottom: 10 }, calc: { color: C.sub, fontSize: 12, marginBottom: 6 },
   listCard: { backgroundColor: C.panel, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 16, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, listTitle: { color: C.text, fontSize: 16, fontWeight: '700' }, listSub: { color: C.sub, marginTop: 4 }, metric: { color: C.accent, fontSize: 25, fontWeight: '800' },
   taskRow: { minHeight: 58, backgroundColor: C.panel, borderRadius: 16, borderWidth: 1, borderColor: C.border, paddingHorizontal: 16, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 12 }, taskText: { color: C.text, flex: 1, fontSize: 15 }, doneText: { textDecorationLine: 'line-through', color: C.sub },
-  quoteCard: { backgroundColor: C.panel, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 19, marginBottom: 12 }, quoteIndex: { color: C.accent, fontWeight: '800', fontSize: 11, letterSpacing: 1.5 }, quoteLarge: { color: C.text, fontSize: 20, lineHeight: 31, fontWeight: '650', marginTop: 12 }, readLink: { marginTop: 16, flexDirection: 'row', alignItems: 'center', gap: 6 }, readLinkText: { color: C.accent2, fontWeight: '700', fontSize: 12 },
+  quoteCard: { backgroundColor: C.panel, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 19, marginBottom: 12 }, quoteIndex: { color: C.accent, fontWeight: '800', fontSize: 11, letterSpacing: 1.5 }, quoteLarge: { color: C.text, fontSize: 20, lineHeight: 31, fontWeight: '600', marginTop: 12 }, readLink: { marginTop: 16, flexDirection: 'row', alignItems: 'center', gap: 6 }, readLinkText: { color: C.accent2, fontWeight: '700', fontSize: 12 },
   article: { backgroundColor: C.panel, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 19, marginBottom: 14 }, articleTitle: { color: C.text, fontSize: 22, fontWeight: '800', marginTop: 11 }, articleBody: { color: '#CBD1DB', fontSize: 15, lineHeight: 25, marginTop: 12 },
   segment: { flexDirection: 'row', backgroundColor: C.panel, borderRadius: 14, padding: 4, marginBottom: 22, borderWidth: 1, borderColor: C.border }, segmentItem: { flex: 1, minHeight: 42, borderRadius: 11, alignItems: 'center', justifyContent: 'center' }, segmentActive: { backgroundColor: C.panel2 }, segmentText: { color: C.text, fontWeight: '700', fontSize: 13 },
-  wordRow: { minHeight: 66, borderBottomWidth: 1, borderBottomColor: C.border, flexDirection: 'row', alignItems: 'center', gap: 12 }, wordNo: { color: C.sub, width: 27, fontSize: 11 }, word: { color: C.text, fontSize: 17, fontWeight: '750' }, phonetic: { color: C.sub, marginTop: 4, fontSize: 12 },
+  wordRow: { minHeight: 66, borderBottomWidth: 1, borderBottomColor: C.border, flexDirection: 'row', alignItems: 'center', gap: 12 }, wordNo: { color: C.sub, width: 27, fontSize: 11 }, word: { color: C.text, fontSize: 17, fontWeight: '700' }, phonetic: { color: C.sub, marginTop: 4, fontSize: 12 },
   reviewCard: { backgroundColor: C.panel, borderRadius: 24, borderWidth: 1, borderColor: C.border, padding: 22 }, reviewZh: { color: C.text, fontSize: 34, fontWeight: '800', marginTop: 30, textAlign: 'center' }, reviewPhonetic: { color: C.accent2, fontSize: 18, textAlign: 'center', marginTop: 9, marginBottom: 30 }, feedback: { color: C.danger, marginVertical: 8, fontWeight: '700', textAlign: 'center' },
   prompt: { flexDirection: 'row', gap: 9, marginBottom: 10 }, promptDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent, marginTop: 7 }, promptText: { color: C.sub, lineHeight: 20, flex: 1 }, textarea: { minHeight: 260, borderRadius: 16, backgroundColor: C.panel2, borderWidth: 1, borderColor: C.border, color: C.text, padding: 15, textAlignVertical: 'top', marginTop: 10, fontSize: 15, lineHeight: 24 }, saveHint: { color: C.sub, fontSize: 11, marginTop: 10, textAlign: 'right' },
-  drawerShade: { flex: 1, flexDirection: 'row-reverse', backgroundColor: 'rgba(0,0,0,.6)' }, drawerPanel: { width: '82%', backgroundColor: '#0D1118', padding: 20, paddingTop: 54, borderRightWidth: 1, borderRightColor: C.border }, brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12 }, brandDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: C.accent }, brand: { color: C.text, fontSize: 15, fontWeight: '900', letterSpacing: 1.6 }, brandSub: { color: C.sub, fontSize: 10, marginTop: 3 }, drawerLine: { height: 1, backgroundColor: C.border, marginVertical: 22 }, menuItem: { height: 50, borderRadius: 14, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 12, marginBottom: 5 }, menuActive: { backgroundColor: C.panel2 }, menuText: { color: C.sub, fontSize: 14, fontWeight: '650' }, drawerFooter: { backgroundColor: C.panel, padding: 15, borderRadius: 16, borderWidth: 1, borderColor: C.border, marginBottom: 24 }, drawerFooterTitle: { color: C.sub, fontSize: 11 }, drawerPercent: { color: C.text, fontSize: 26, fontWeight: '800', marginTop: 5 }, track: { height: 5, backgroundColor: C.panel2, borderRadius: 4, overflow: 'hidden', marginTop: 10 }, trackFill: { height: '100%', backgroundColor: C.accent },
-  centerShade: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,.72)', padding: 24 }, motivationCard: { width: '100%', backgroundColor: C.panel, borderRadius: 24, borderWidth: 1, borderColor: C.border, padding: 24, alignItems: 'center' }, motivationText: { color: C.text, fontSize: 21, lineHeight: 32, fontWeight: '750', textAlign: 'center', marginVertical: 22 },
+  drawerShade: { flex: 1, flexDirection: 'row-reverse', backgroundColor: 'rgba(0,0,0,.6)' }, drawerPanel: { width: '82%', backgroundColor: '#0D1118', padding: 20, paddingTop: 54, borderRightWidth: 1, borderRightColor: C.border }, brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12 }, brandDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: C.accent }, brand: { color: C.text, fontSize: 15, fontWeight: '900', letterSpacing: 1.6 }, brandSub: { color: C.sub, fontSize: 10, marginTop: 3 }, drawerLine: { height: 1, backgroundColor: C.border, marginVertical: 22 }, menuItem: { height: 50, borderRadius: 14, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 12, marginBottom: 5 }, menuActive: { backgroundColor: C.panel2 }, menuText: { color: C.sub, fontSize: 14, fontWeight: '600' }, drawerFooter: { backgroundColor: C.panel, padding: 15, borderRadius: 16, borderWidth: 1, borderColor: C.border, marginBottom: 24 }, drawerFooterTitle: { color: C.sub, fontSize: 11 }, drawerPercent: { color: C.text, fontSize: 26, fontWeight: '800', marginTop: 5 }, track: { height: 5, backgroundColor: C.panel2, borderRadius: 4, overflow: 'hidden', marginTop: 10 }, trackFill: { height: '100%', backgroundColor: C.accent },
+  centerShade: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,.72)', padding: 24 }, motivationCard: { width: '100%', backgroundColor: C.panel, borderRadius: 24, borderWidth: 1, borderColor: C.border, padding: 24, alignItems: 'center' }, motivationText: { color: C.text, fontSize: 21, lineHeight: 32, fontWeight: '700', textAlign: 'center', marginVertical: 22 },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: C.panel2 }, badgeDone: { backgroundColor: '#12251E' }, badgeText: { color: C.sub, fontSize: 11 },
 });
