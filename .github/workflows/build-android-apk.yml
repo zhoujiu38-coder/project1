@@ -41,16 +41,11 @@ jobs:
           file assets/icon-build.png
           identify assets/icon-build.png
 
-      - name: Apply compact safe-layout dark-gold UI
-        run: node scripts/apply-responsive-dark-gold.js
-
-      - name: Normalize React Native font weights
-        run: |
-          sed -i "s/fontWeight: '650'/fontWeight: '600'/g" App.tsx
-          sed -i "s/fontWeight: '750'/fontWeight: '700'/g" App.tsx
-
       - name: Type check
         run: npm run typecheck
+
+      - name: Test responsive layout
+        run: node scripts/test-layout.cjs
 
       - name: Generate Android project
         env:
@@ -73,12 +68,12 @@ jobs:
       - name: Prepare APK
         run: |
           mkdir -p dist
-          cp android/app/build/outputs/apk/release/app-release.apk dist/Qi-v1.0.3-layout-icon-release.apk
+          cp android/app/build/outputs/apk/release/app-release.apk dist/Qi-v1.0.4-responsive-release.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Qi-v1.0.3-layout-icon-release-apk
-          path: dist/Qi-v1.0.3-layout-icon-release.apk
+          name: Qi-v1.0.4-responsive-release-apk
+          path: dist/Qi-v1.0.4-responsive-release.apk
           if-no-files-found: error
           retention-days: 30

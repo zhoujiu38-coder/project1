@@ -7,13 +7,18 @@ import {
   Alert,
   Modal,
   Pressable,
-  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
+
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getLayout } from './layout';
 
 type Page = 'home' | 'fitness' | 'study' | 'quotes' | 'reading' | 'english' | 'review';
 type Workout = { id: string; name: string; reps: number; sets: number; total: number };
@@ -35,16 +40,16 @@ type WordItem = { word: string; phonetic: string; zh: string };
 type ReadingItem = { title: string; content: string; source: string; lang: 'zh-CN' | 'en-US' };
 
 const C = {
-  bg: '#090B10',
-  panel: '#11151D',
-  panel2: '#171C26',
-  border: '#242B38',
-  text: '#F4F6F8',
-  sub: '#9099A8',
-  accent: '#8FE3C1',
-  accent2: '#9EB7FF',
-  warm: '#F0C98A',
-  danger: '#FF9E9E',
+  bg: '#050505',
+  panel: '#100E0A',
+  panel2: '#19150E',
+  border: '#44341D',
+  text: '#F6EFE4',
+  sub: '#A99A82',
+  accent: '#C79A4C',
+  accent2: '#D9B86F',
+  warm: '#D3A555',
+  danger: '#D88B78',
 };
 
 const emptyDaily: DailyState = {
@@ -148,23 +153,31 @@ const shuffle = <T,>(arr: T[]) => [...arr].sort(() => Math.random() - 0.5);
 const todayKey = () => new Date().toISOString().slice(0, 10);
 
 function AppButton({ label, onPress, kind = 'primary', icon }: { label: string; onPress: () => void; kind?: 'primary' | 'ghost' | 'warm'; icon?: keyof typeof MaterialCommunityIcons.glyphMap }) {
+  const styles = useStyles();
   return (
-    <Pressable onPress={onPress} style={[styles.button, kind === 'ghost' && styles.buttonGhost, kind === 'warm' && styles.buttonWarm]}>
-      {icon ? <MaterialCommunityIcons name={icon} size={18} color={kind === 'primary' ? '#07110D' : C.text} /> : null}
-      <Text style={[styles.buttonText, kind === 'primary' && { color: '#07110D' }]}>{label}</Text>
+    <Pressable accessibilityRole="button" onPress={onPress} style={[styles.button, kind === 'ghost' && styles.buttonGhost, kind === 'warm' && styles.buttonWarm]}>
+      {icon ? <MaterialCommunityIcons name={icon} size={18} color={kind === 'primary' ? '#110C05' : C.text} /> : null}
+      <Text style={[styles.buttonText, kind === 'primary' && { color: '#110C05' }]}>{label}</Text>
     </Pressable>
   );
 }
 
 function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+  const styles = useStyles();
   return <View style={{ marginBottom: 14 }}><Text style={styles.sectionTitle}>{title}</Text>{subtitle ? <Text style={styles.sectionSub}>{subtitle}</Text> : null}</View>;
 }
 
 function Badge({ done, text }: { done: boolean; text: string }) {
+  const styles = useStyles();
   return <View style={[styles.badge, done && styles.badgeDone]}><Text style={[styles.badgeText, done && { color: C.accent }]}>{text}</Text></View>;
 }
 
 export default function App() {
+  return <SafeAreaProvider><Desk /></SafeAreaProvider>;
+}
+
+function Desk() {
+  const styles = useStyles();
   const [page, setPage] = useState<Page>('home');
   const [drawer, setDrawer] = useState(false);
   const [daily, setDaily] = useState<DailyState>(emptyDaily);
@@ -203,18 +216,19 @@ export default function App() {
 
   const navigate = (next: Page) => { setPage(next); setDrawer(false); };
 
-  const title = menuItems.find((x) => x.key === page)?.label ?? '个人成长工作台';
+  const title = menuItems.find((x) => x.key === page)?.label ?? '栖';
 
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar style="light" />
       <View style={styles.topbar}>
-        <Pressable onPress={() => setDrawer(true)} style={styles.iconButton}><MaterialCommunityIcons name="menu" size={25} color={C.text} /></Pressable>
-        <View style={{ flex: 1 }}><Text style={styles.topTitle}>{title}</Text><Text style={styles.topDate}>{todayKey()}</Text></View>
+        <Pressable accessibilityRole="button" accessibilityLabel="打开菜单" onPress={() => setDrawer(true)} style={styles.iconButton}><MaterialCommunityIcons name="menu" size={25} color={C.text} /></Pressable>
+        <View style={styles.flexBody}><Text style={styles.topTitle}>{title}</Text><Text style={styles.topDate}>{todayKey()}</Text></View>
         <View style={styles.progressPill}><Text style={styles.progressPillText}>{completion}%</Text></View>
       </View>
 
-      <ScrollView key={page} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView style={styles.scrollArea} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView testID="page-scroll" key={page} style={styles.scrollArea} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
         {page !== 'home' && (
           <Pressable
             accessibilityRole="button"
@@ -234,33 +248,35 @@ export default function App() {
         {page === 'english' && <English daily={daily} setDaily={setDaily} speak={speak} />}
         {page === 'review' && <Review daily={daily} setDaily={setDaily} />}
       </ScrollView>
+      </KeyboardAvoidingView>
 
-      <Modal visible={drawer} animationType="fade" transparent onRequestClose={() => setDrawer(false)}>
-        <View style={styles.drawerShade}>
-          <Pressable style={{ flex: 1 }} onPress={() => setDrawer(false)} />
-          <View style={styles.drawerPanel}>
-            <View style={styles.brandRow}><View style={styles.brandDot} /><View><Text style={styles.brand}>NORTHSTAR</Text><Text style={styles.brandSub}>Personal Growth OS</Text></View></View>
+      <Modal statusBarTranslucent navigationBarTranslucent visible={drawer} animationType="fade" transparent onRequestClose={() => setDrawer(false)}>
+        <SafeAreaView style={styles.drawerShade}>
+          <Pressable style={styles.flexBody} onPress={() => setDrawer(false)} />
+          <ScrollView style={styles.drawerPanel} contentContainerStyle={styles.drawerContent} keyboardShouldPersistTaps="handled">
+            <View style={styles.brandRow}><View style={styles.brandDot} /><View><Text style={styles.brand}>栖</Text><Text style={styles.brandSub}>Personal Growth</Text></View></View>
             <View style={styles.drawerLine} />
             {menuItems.map((item) => (
-              <Pressable key={item.key} onPress={() => navigate(item.key)} style={[styles.menuItem, page === item.key && styles.menuActive]}>
+              <Pressable accessibilityRole="button" accessibilityLabel={item.label} key={item.key} onPress={() => navigate(item.key)} style={[styles.menuItem, page === item.key && styles.menuActive]}>
                 <MaterialCommunityIcons name={item.icon} size={21} color={page === item.key ? C.accent : C.sub} />
                 <Text style={[styles.menuText, page === item.key && { color: C.text }]}>{item.label}</Text>
               </Pressable>
             ))}
-            <View style={{ flex: 1 }} />
+            <View style={styles.flexBody} />
             <View style={styles.drawerFooter}><Text style={styles.drawerFooterTitle}>今日完成度</Text><Text style={styles.drawerPercent}>{completion}%</Text><View style={styles.track}><View style={[styles.trackFill, { width: `${completion}%` }]} /></View></View>
-          </View>
-        </View>
+          </ScrollView>
+        </SafeAreaView>
       </Modal>
 
-      <Modal visible={!!motivation} transparent animationType="fade" onRequestClose={() => setMotivation(null)}>
-        <View style={styles.centerShade}><View style={styles.motivationCard}><MaterialCommunityIcons name="creation-outline" size={28} color={C.warm} /><Text style={styles.motivationText}>{motivation}</Text><AppButton label="继续" onPress={() => setMotivation(null)} /></View></View>
+      <Modal statusBarTranslucent navigationBarTranslucent visible={!!motivation} transparent animationType="fade" onRequestClose={() => setMotivation(null)}>
+        <SafeAreaView style={styles.centerShade}><ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalContent}><View style={styles.motivationCard}><MaterialCommunityIcons name="creation-outline" size={28} color={C.warm} /><Text style={styles.motivationText}>{motivation}</Text><AppButton label="继续" onPress={() => setMotivation(null)} /></View></ScrollView></SafeAreaView>
       </Modal>
     </SafeAreaView>
   );
 }
 
 function Home({ daily, completion, quotes, onOpen, speak }: { daily: DailyState; completion: number; quotes: string[]; onOpen: (p: Page) => void; speak: (t: string, l: string) => void }) {
+  const styles = useStyles();
   const items = [
     ['fitness', '健身', daily.fitnessDone, 'dumbbell'], ['study', '学习计划', daily.studyDone, 'book-open-page-variant-outline'],
     ['quotes', '每日好句', daily.quotesDone, 'format-quote-close'], ['reading', '每日阅读', daily.readingDone, 'book-open-outline'],
@@ -276,7 +292,7 @@ function Home({ daily, completion, quotes, onOpen, speak }: { daily: DailyState;
 
     <SectionTitle title="今日模块" subtitle="不用追求全部完美，先完成最重要的一件。" />
     <View style={styles.grid}>
-      {items.map(([key, label, done, icon]) => <Pressable key={key} onPress={() => onOpen(key)} style={styles.moduleCard}>
+      {items.map(([key, label, done, icon]) => <Pressable accessibilityRole="button" accessibilityLabel={label} testID={`module-${key}`} key={key} onPress={() => onOpen(key)} style={styles.moduleCard}>
         <View style={styles.moduleIcon}><MaterialCommunityIcons name={icon} size={23} color={done ? C.accent : C.sub} /></View>
         <Text style={styles.moduleTitle}>{label}</Text><Text style={styles.moduleState}>{done ? '已完成' : '待完成'}</Text>
         <View style={[styles.stateDot, done && { backgroundColor: C.accent }]} />
@@ -284,12 +300,13 @@ function Home({ daily, completion, quotes, onOpen, speak }: { daily: DailyState;
     </View>
 
     <View style={styles.card}>
-      <View style={styles.rowBetween}><View><Text style={styles.cardLabel}>DAILY NOTE</Text><Text style={styles.quoteText}>{quotes[0]}</Text></View><Pressable onPress={() => speak(quotes[0], 'zh-CN')} style={styles.iconButton}><MaterialCommunityIcons name="volume-high" size={21} color={C.accent2} /></Pressable></View>
+      <View style={styles.rowBetween}><View style={styles.quoteBody}><Text style={styles.cardLabel}>DAILY NOTE</Text><Text style={styles.quoteText}>{quotes[0]}</Text></View><Pressable onPress={() => speak(quotes[0], 'zh-CN')} style={styles.noteAction}><MaterialCommunityIcons name="volume-high" size={22} color={C.accent2} /></Pressable></View>
     </View>
   </>;
 }
 
 function Fitness({ daily, setDaily, onMotivate }: { daily: DailyState; setDaily: React.Dispatch<React.SetStateAction<DailyState>>; onMotivate: (s: string) => void }) {
+  const styles = useStyles();
   const [name, setName] = useState(''); const [reps, setReps] = useState(''); const [sets, setSets] = useState('');
   useEffect(() => { if (!daily.fitnessDone) onMotivate(randomOf(fitnessBefore)); }, []);
   const add = () => {
@@ -302,16 +319,17 @@ function Fitness({ daily, setDaily, onMotivate }: { daily: DailyState; setDaily:
     <SectionTitle title="训练记录" subtitle="记录每一组，把模糊的努力变成可观察的数据。" />
     <View style={styles.card}>
       <TextInput value={name} onChangeText={setName} placeholder="运动项目，如：俯卧撑" placeholderTextColor={C.sub} style={styles.input} />
-      <View style={{ flexDirection: 'row', gap: 10 }}><TextInput value={reps} onChangeText={setReps} keyboardType="number-pad" placeholder="次数" placeholderTextColor={C.sub} style={[styles.input, { flex: 1 }]} /><TextInput value={sets} onChangeText={setSets} keyboardType="number-pad" placeholder="组数" placeholderTextColor={C.sub} style={[styles.input, { flex: 1 }]} /></View>
+      <View style={styles.actionRow}><TextInput value={reps} onChangeText={setReps} keyboardType="number-pad" placeholder="次数" placeholderTextColor={C.sub} style={[styles.input, { flex: 1 }]} /><TextInput value={sets} onChangeText={setSets} keyboardType="number-pad" placeholder="组数" placeholderTextColor={C.sub} style={[styles.input, { flex: 1 }]} /></View>
       <Text style={styles.calc}>预计总数量：{(Number(reps) || 0) * (Number(sets) || 0)}</Text>
       <AppButton label="记录本组训练" icon="plus" onPress={add} />
     </View>
-    {daily.workouts.map((w) => <View style={styles.listCard} key={w.id}><View><Text style={styles.listTitle}>{w.name}</Text><Text style={styles.listSub}>{w.reps} 次 × {w.sets} 组</Text></View><Text style={styles.metric}>{w.total}</Text></View>)}
+    {daily.workouts.map((w) => <View style={styles.listCard} key={w.id}><View style={styles.flexBody}><Text style={styles.listTitle}>{w.name}</Text><Text style={styles.listSub}>{w.reps} 次 × {w.sets} 组</Text></View><Text style={styles.metric}>{w.total}</Text></View>)}
     <AppButton label={daily.fitnessDone ? '今日训练已完成' : '完成今日训练'} kind={daily.fitnessDone ? 'ghost' : 'warm'} icon="check-circle-outline" onPress={() => { if (daily.fitnessDone) return; setDaily((d) => ({ ...d, fitnessDone: true })); onMotivate(randomOf(fitnessAfter)); }} />
   </>;
 }
 
 function Study({ daily, setDaily, onMotivate }: { daily: DailyState; setDaily: React.Dispatch<React.SetStateAction<DailyState>>; onMotivate: (s: string) => void }) {
+  const styles = useStyles();
   const [title, setTitle] = useState('');
   const add = () => { if (!title.trim()) return; setDaily((d) => ({ ...d, studyTasks: [...d.studyTasks, { id: Date.now().toString(), title: title.trim(), done: false }] })); setTitle(''); };
   return <>
@@ -323,14 +341,17 @@ function Study({ daily, setDaily, onMotivate }: { daily: DailyState; setDaily: R
 }
 
 function Quotes({ daily, setDaily, quotes, speak }: { daily: DailyState; setDaily: React.Dispatch<React.SetStateAction<DailyState>>; quotes: string[]; speak: (t: string, l: string) => void }) {
+  const styles = useStyles();
   return <><SectionTitle title="每日好句" subtitle="每天五句。读一遍，选一句真正带走。" />{quotes.map((q, i) => <View style={styles.quoteCard} key={`${q}-${i}`}><Text style={styles.quoteIndex}>0{i + 1}</Text><Text style={styles.quoteLarge}>{q}</Text><Pressable style={styles.readLink} onPress={() => speak(q, 'zh-CN')}><MaterialCommunityIcons name="volume-high" size={18} color={C.accent2} /><Text style={styles.readLinkText}>朗读</Text></Pressable></View>)}<AppButton label={daily.quotesDone ? '今日好句已学习' : '完成今日好句学习'} kind={daily.quotesDone ? 'ghost' : 'primary'} onPress={() => setDaily((d) => ({ ...d, quotesDone: true }))} /></>;
 }
 
 function Reading({ daily, setDaily, speak }: { daily: DailyState; setDaily: React.Dispatch<React.SetStateAction<DailyState>>; speak: (t: string, l: string) => void }) {
+  const styles = useStyles();
   return <><SectionTitle title="每日阅读" subtitle="两篇短文，保持语言与思考的输入。" />{cnReadings.map((r) => <View style={styles.article} key={r.title}><Text style={styles.cardLabel}>{r.source}</Text><Text style={styles.articleTitle}>{r.title}</Text><Text style={styles.articleBody}>{r.content}</Text><AppButton label="朗读全文" kind="ghost" icon="volume-high" onPress={() => speak(`${r.title}。${r.content}`, r.lang)} /></View>)}<AppButton label={daily.readingDone ? '今日阅读已完成' : '完成今日阅读'} kind={daily.readingDone ? 'ghost' : 'primary'} onPress={() => setDaily((d) => ({ ...d, readingDone: true }))} /></>;
 }
 
 function English({ daily, setDaily, speak }: { daily: DailyState; setDaily: React.Dispatch<React.SetStateAction<DailyState>>; speak: (t: string, l: string) => void }) {
+  const styles = useStyles();
   const [tab, setTab] = useState<'words' | 'reading'>('words');
   const [reviewMode, setReviewMode] = useState(false);
   const [reviewWords, setReviewWords] = useState<WordItem[]>([]);
@@ -347,44 +368,80 @@ function English({ daily, setDaily, speak }: { daily: DailyState; setDaily: Reac
 
   return <>
     <View style={styles.segment}><Pressable onPress={() => setTab('words')} style={[styles.segmentItem, tab === 'words' && styles.segmentActive]}><Text style={styles.segmentText}>单词学习</Text></Pressable><Pressable onPress={() => setTab('reading')} style={[styles.segmentItem, tab === 'reading' && styles.segmentActive]}><Text style={styles.segmentText}>英语阅读</Text></Pressable></View>
-    {tab === 'words' && !reviewMode && <><SectionTitle title="今日 30 词" subtitle="先认识，再朗读；完成后进入乱序拼写复习。" />{words.map((w, i) => <View style={styles.wordRow} key={w.word}><Text style={styles.wordNo}>{String(i + 1).padStart(2, '0')}</Text><View style={{ flex: 1 }}><Text style={styles.word}>{w.word}</Text><Text style={styles.phonetic}>{w.phonetic} · {w.zh}</Text></View><Pressable onPress={() => speak(w.word, 'en-US')}><MaterialCommunityIcons name="volume-medium" size={21} color={C.accent2} /></Pressable></View>)}<AppButton label={daily.wordsDone ? '重新开始乱序复习' : '学习完成，开始复习'} onPress={() => { setDaily((d) => ({ ...d, wordsDone: true })); startReview(); }} /></>}
-    {tab === 'words' && reviewMode && <View style={styles.reviewCard}><Text style={styles.cardLabel}>SPELLING REVIEW · {index + 1}/30</Text><Text style={styles.reviewZh}>{reviewWords[index]?.zh}</Text><Text style={styles.reviewPhonetic}>{reviewWords[index]?.phonetic}</Text><TextInput value={answer} onChangeText={setAnswer} autoCapitalize="none" placeholder="输入英文拼写" placeholderTextColor={C.sub} style={[styles.input, { fontSize: 19 }]} />{feedback ? <Text style={[styles.feedback, feedback.startsWith('正确 ✓') && { color: C.accent }]}>{feedback}</Text> : null}<View style={{ flexDirection: 'row', gap: 10 }}>{!feedback ? <View style={{ flex: 1 }}><AppButton label="检查" onPress={check} /></View> : <View style={{ flex: 1 }}><AppButton label="下一词" onPress={next} /></View>}<View style={{ flex: 1 }}><AppButton label="听发音" kind="ghost" onPress={() => speak(reviewWords[index]?.word ?? '', 'en-US')} /></View></View></View>}
-    {tab === 'reading' && <><SectionTitle title="英语阅读" subtitle="可自行阅读，也可先听原文并跟读。" />{enReadings.map((r) => <View style={styles.article} key={r.title}><Text style={styles.cardLabel}>{r.source}</Text><Text style={styles.articleTitle}>{r.title}</Text><Text style={styles.articleBody}>{r.content}</Text><View style={{ flexDirection: 'row', gap: 10 }}><View style={{ flex: 1 }}><AppButton label="跟读" icon="microphone-outline" onPress={() => speak(r.content, r.lang)} /></View><View style={{ flex: 1 }}><AppButton label="自行阅读" kind="ghost" icon="eye-outline" onPress={() => Alert.alert('自行阅读', '建议先默读一遍，再点击“跟读”对照语音。')} /></View></View></View>)}<AppButton label={daily.englishReadingDone ? '今日英语阅读已完成' : '完成今日英语阅读'} kind={daily.englishReadingDone ? 'ghost' : 'primary'} onPress={() => setDaily((d) => ({ ...d, englishReadingDone: true }))} /></>}
+    {tab === 'words' && !reviewMode && <><SectionTitle title="今日 30 词" subtitle="先认识，再朗读；完成后进入乱序拼写复习。" />{words.map((w, i) => <View style={styles.wordRow} key={w.word}><Text style={styles.wordNo}>{String(i + 1).padStart(2, '0')}</Text><View style={styles.flexBody}><Text style={styles.word}>{w.word}</Text><Text style={styles.phonetic}>{w.phonetic} · {w.zh}</Text></View><Pressable onPress={() => speak(w.word, 'en-US')}><MaterialCommunityIcons name="volume-medium" size={21} color={C.accent2} /></Pressable></View>)}<AppButton label={daily.wordsDone ? '重新开始乱序复习' : '学习完成，开始复习'} onPress={() => { setDaily((d) => ({ ...d, wordsDone: true })); startReview(); }} /></>}
+    {tab === 'words' && reviewMode && <View style={styles.reviewCard}><Text style={styles.cardLabel}>SPELLING REVIEW · {index + 1}/30</Text><Text style={styles.reviewZh}>{reviewWords[index]?.zh}</Text><Text style={styles.reviewPhonetic}>{reviewWords[index]?.phonetic}</Text><TextInput value={answer} onChangeText={setAnswer} autoCapitalize="none" placeholder="输入英文拼写" placeholderTextColor={C.sub} style={[styles.input, { fontSize: 19 }]} />{feedback ? <Text style={[styles.feedback, feedback.startsWith('正确 ✓') && { color: C.accent }]}>{feedback}</Text> : null}<View style={styles.actionRow}>{!feedback ? <View style={styles.flexBody}><AppButton label="检查" onPress={check} /></View> : <View style={styles.flexBody}><AppButton label="下一词" onPress={next} /></View>}<View style={styles.flexBody}><AppButton label="听发音" kind="ghost" onPress={() => speak(reviewWords[index]?.word ?? '', 'en-US')} /></View></View></View>}
+    {tab === 'reading' && <><SectionTitle title="英语阅读" subtitle="可自行阅读，也可先听原文并跟读。" />{enReadings.map((r) => <View style={styles.article} key={r.title}><Text style={styles.cardLabel}>{r.source}</Text><Text style={styles.articleTitle}>{r.title}</Text><Text style={styles.articleBody}>{r.content}</Text><View style={styles.actionRow}><View style={styles.flexBody}><AppButton label="跟读" icon="microphone-outline" onPress={() => speak(r.content, r.lang)} /></View><View style={styles.flexBody}><AppButton label="自行阅读" kind="ghost" icon="eye-outline" onPress={() => Alert.alert('自行阅读', '建议先默读一遍，再点击“跟读”对照语音。')} /></View></View></View>)}<AppButton label={daily.englishReadingDone ? '今日英语阅读已完成' : '完成今日英语阅读'} kind={daily.englishReadingDone ? 'ghost' : 'primary'} onPress={() => setDaily((d) => ({ ...d, englishReadingDone: true }))} /></>}
   </>;
 }
 
 function Review({ daily, setDaily }: { daily: DailyState; setDaily: React.Dispatch<React.SetStateAction<DailyState>> }) {
+  const styles = useStyles();
   const prompts = ['今天最值得保留的一件事是什么？', '哪里做得不够好，明天怎么改？', '今天有没有把时间花在真正重要的事情上？'];
   return <><SectionTitle title="每日复盘" subtitle="不用写得漂亮，只要对今天足够诚实。" /><View style={styles.card}>{prompts.map((p) => <View style={styles.prompt} key={p}><View style={styles.promptDot} /><Text style={styles.promptText}>{p}</Text></View>)}<TextInput multiline value={daily.reflection} onChangeText={(reflection) => setDaily((d) => ({ ...d, reflection }))} placeholder="写下今天的复盘、感受、问题与明天的调整……" placeholderTextColor={C.sub} style={styles.textarea} /><Text style={styles.saveHint}>{daily.reflection.trim() ? '已自动保存到今天' : '输入后自动保存'}</Text></View></>;
 }
 
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   backButton: { alignSelf: 'flex-start', maxWidth: '100%', minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 14, borderRadius: 12, backgroundColor: C.panel2, borderWidth: 1, borderColor: C.border },
   backButtonPressed: { opacity: 0.7 },
   backIcon: { flexShrink: 0 },
   backButtonText: { color: C.accent, fontSize: 14, fontWeight: '700', flexShrink: 1 },
   root: { flex: 1, backgroundColor: C.bg },
-  topbar: { height: 68, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: C.border },
-  iconButton: { width: 40, height: 40, borderRadius: 12, backgroundColor: C.panel2, alignItems: 'center', justifyContent: 'center' },
+  topbar: { minHeight: 58, paddingVertical: 7, flexDirection: 'row', alignItems: 'center', gap: 10, borderBottomWidth: 1, borderBottomColor: C.border },
+  iconButton: { width: 42, height: 42, flexShrink: 0, borderRadius: 13, backgroundColor: C.panel2, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
   topTitle: { color: C.text, fontSize: 16, fontWeight: '700' }, topDate: { color: C.sub, fontSize: 11, marginTop: 2, letterSpacing: 1 },
-  progressPill: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: '#12251E', borderWidth: 1, borderColor: '#214B3B' }, progressPillText: { color: C.accent, fontWeight: '800', fontSize: 12 },
-  content: { padding: 18, paddingBottom: 48 },
-  hero: { backgroundColor: '#10151D', padding: 22, borderRadius: 26, borderWidth: 1, borderColor: C.border, marginBottom: 28 },
-  eyebrow: { color: C.accent, fontSize: 11, letterSpacing: 1.7, fontWeight: '800' }, heroTitle: { color: C.text, fontSize: 28, lineHeight: 38, fontWeight: '800', marginTop: 14 }, heroSub: { color: C.sub, fontSize: 14, lineHeight: 22, marginTop: 10 }, heroBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 28 }, bigPercent: { color: C.text, fontSize: 38, fontWeight: '800' }, muted: { color: C.sub, marginTop: 3 }, ringFake: { width: 58, height: 58, borderRadius: 29, borderWidth: 5, borderColor: C.accent, alignItems: 'center', justifyContent: 'center' }, ringText: { color: C.text, fontWeight: '800' },
-  sectionTitle: { color: C.text, fontSize: 22, fontWeight: '800' }, sectionSub: { color: C.sub, fontSize: 13, lineHeight: 20, marginTop: 5 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 }, moduleCard: { width: '48.4%', minHeight: 135, backgroundColor: C.panel, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 16 }, moduleIcon: { width: 42, height: 42, borderRadius: 13, backgroundColor: C.panel2, alignItems: 'center', justifyContent: 'center' }, moduleTitle: { color: C.text, fontSize: 15, fontWeight: '700', marginTop: 14 }, moduleState: { color: C.sub, fontSize: 12, marginTop: 5 }, stateDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#45505F', position: 'absolute', right: 14, top: 14 },
-  card: { backgroundColor: C.panel, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 18, marginBottom: 16 }, rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14 }, cardLabel: { color: C.accent, fontSize: 10, fontWeight: '800', letterSpacing: 1.5 }, quoteText: { color: C.text, fontSize: 17, lineHeight: 26, marginTop: 9, maxWidth: 280 },
-  button: { minHeight: 48, borderRadius: 14, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginTop: 8 }, buttonGhost: { backgroundColor: C.panel2, borderWidth: 1, borderColor: C.border }, buttonWarm: { backgroundColor: '#2A2117', borderWidth: 1, borderColor: '#5A4528' }, buttonText: { color: C.text, fontSize: 14, fontWeight: '800' },
-  input: { minHeight: 50, borderRadius: 14, backgroundColor: C.panel2, borderWidth: 1, borderColor: C.border, color: C.text, paddingHorizontal: 14, marginBottom: 10 }, calc: { color: C.sub, fontSize: 12, marginBottom: 6 },
-  listCard: { backgroundColor: C.panel, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 16, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, listTitle: { color: C.text, fontSize: 16, fontWeight: '700' }, listSub: { color: C.sub, marginTop: 4 }, metric: { color: C.accent, fontSize: 25, fontWeight: '800' },
-  taskRow: { minHeight: 58, backgroundColor: C.panel, borderRadius: 16, borderWidth: 1, borderColor: C.border, paddingHorizontal: 16, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 12 }, taskText: { color: C.text, flex: 1, fontSize: 15 }, doneText: { textDecorationLine: 'line-through', color: C.sub },
+  progressPill: { minWidth: 54, height: 38, paddingHorizontal: 11, flexShrink: 0, borderRadius: 19, backgroundColor: '#21180B', borderWidth: 1, borderColor: '#57401D', alignItems: 'center', justifyContent: 'center' }, progressPillText: { color: C.accent, fontWeight: '800', fontSize: 12 },
+  content: { paddingTop: 14, paddingBottom: 36 },
+  hero: { backgroundColor: '#0D1016', paddingHorizontal: 20, paddingVertical: 18, borderRadius: 22, borderWidth: 1, borderColor: C.border, marginBottom: 22 },
+  eyebrow: { color: C.accent, fontSize: 11, letterSpacing: 1.7, fontWeight: '800' }, heroTitle: { color: C.text, fontSize: 23, lineHeight: 32, fontWeight: '800', marginTop: 10 }, heroSub: { color: C.sub, fontSize: 13, lineHeight: 20, marginTop: 7 }, heroBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 18 }, bigPercent: { color: C.text, fontSize: 34, lineHeight: 40, fontWeight: '800' }, muted: { color: C.sub, marginTop: 3 }, ringFake: { width: 54, height: 54, borderRadius: 27, borderWidth: 4, borderColor: C.accent, alignItems: 'center', justifyContent: 'center' }, ringText: { color: C.text, fontWeight: '800' },
+  sectionTitle: { color: C.text, fontSize: 21, lineHeight: 28, fontWeight: '800' }, sectionSub: { color: C.sub, fontSize: 13, lineHeight: 20, marginTop: 5 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12, columnGap: 10, marginBottom: 22 }, moduleCard: { minHeight: 128, backgroundColor: C.panel, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 16 }, moduleIcon: { width: 46, height: 46, flexShrink: 0, borderRadius: 14, backgroundColor: C.panel2, borderWidth: 1, borderColor: '#2A2114', alignItems: 'center', justifyContent: 'center' }, moduleTitle: { color: C.text, fontSize: 15, lineHeight: 20, fontWeight: '700', marginTop: 16 }, moduleState: { color: C.sub, fontSize: 12, marginTop: 5 }, stateDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#72572B', position: 'absolute', right: 15, top: 15 },
+  card: { backgroundColor: C.panel, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 18, marginBottom: 16, overflow: 'hidden' }, rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }, cardLabel: { color: C.accent, fontSize: 10, fontWeight: '800', letterSpacing: 1.5 }, quoteText: { color: C.text, fontSize: 16, lineHeight: 25, marginTop: 8, flexShrink: 1 },
+  button: { minHeight: 48, borderRadius: 14, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 12, marginTop: 8 }, buttonGhost: { backgroundColor: C.panel2, borderWidth: 1, borderColor: C.border }, buttonWarm: { backgroundColor: '#241A0D', borderWidth: 1, borderColor: '#6E5227' }, buttonText: { flexShrink: 1, textAlign: 'center', color: C.text, fontSize: 14, fontWeight: '800' },
+  input: { minWidth: 0, minHeight: 50, borderRadius: 14, backgroundColor: C.panel2, borderWidth: 1, borderColor: C.border, color: C.text, paddingHorizontal: 14, marginBottom: 10 }, calc: { color: C.sub, fontSize: 12, marginBottom: 6 },
+  listCard: { backgroundColor: C.panel, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 16, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, listTitle: { color: C.text, fontSize: 16, fontWeight: '700' }, listSub: { color: C.sub, marginTop: 4 }, metric: { flexShrink: 1, textAlign: 'right', marginLeft: 12, color: C.accent, fontSize: 25, fontWeight: '800' },
+  taskRow: { minHeight: 58, paddingVertical: 12, backgroundColor: C.panel, borderRadius: 16, borderWidth: 1, borderColor: C.border, paddingHorizontal: 16, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 12 }, taskText: { color: C.text, flex: 1, fontSize: 15 }, doneText: { textDecorationLine: 'line-through', color: C.sub },
   quoteCard: { backgroundColor: C.panel, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 19, marginBottom: 12 }, quoteIndex: { color: C.accent, fontWeight: '800', fontSize: 11, letterSpacing: 1.5 }, quoteLarge: { color: C.text, fontSize: 20, lineHeight: 31, fontWeight: '600', marginTop: 12 }, readLink: { marginTop: 16, flexDirection: 'row', alignItems: 'center', gap: 6 }, readLinkText: { color: C.accent2, fontWeight: '700', fontSize: 12 },
-  article: { backgroundColor: C.panel, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 19, marginBottom: 14 }, articleTitle: { color: C.text, fontSize: 22, fontWeight: '800', marginTop: 11 }, articleBody: { color: '#CBD1DB', fontSize: 15, lineHeight: 25, marginTop: 12 },
-  segment: { flexDirection: 'row', backgroundColor: C.panel, borderRadius: 14, padding: 4, marginBottom: 22, borderWidth: 1, borderColor: C.border }, segmentItem: { flex: 1, minHeight: 42, borderRadius: 11, alignItems: 'center', justifyContent: 'center' }, segmentActive: { backgroundColor: C.panel2 }, segmentText: { color: C.text, fontWeight: '700', fontSize: 13 },
-  wordRow: { minHeight: 66, borderBottomWidth: 1, borderBottomColor: C.border, flexDirection: 'row', alignItems: 'center', gap: 12 }, wordNo: { color: C.sub, width: 27, fontSize: 11 }, word: { color: C.text, fontSize: 17, fontWeight: '700' }, phonetic: { color: C.sub, marginTop: 4, fontSize: 12 },
+  article: { backgroundColor: C.panel, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 19, marginBottom: 14 }, articleTitle: { color: C.text, fontSize: 22, fontWeight: '800', marginTop: 11 }, articleBody: { color: '#D8CCB8', fontSize: 15, lineHeight: 25, marginTop: 12 },
+  segment: { flexDirection: 'row', backgroundColor: C.panel, borderRadius: 14, padding: 4, marginBottom: 22, borderWidth: 1, borderColor: C.border }, segmentItem: { flex: 1, paddingVertical: 10, paddingHorizontal: 8, minHeight: 42, borderRadius: 11, alignItems: 'center', justifyContent: 'center' }, segmentActive: { backgroundColor: C.panel2 }, segmentText: { textAlign: 'center', flexShrink: 1, color: C.text, fontWeight: '700', fontSize: 13 },
+  wordRow: { minHeight: 66, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.border, flexDirection: 'row', alignItems: 'center', gap: 12 }, wordNo: { color: C.sub, width: 27, fontSize: 11 }, word: { color: C.text, fontSize: 17, fontWeight: '700' }, phonetic: { color: C.sub, marginTop: 4, fontSize: 12 },
   reviewCard: { backgroundColor: C.panel, borderRadius: 24, borderWidth: 1, borderColor: C.border, padding: 22 }, reviewZh: { color: C.text, fontSize: 34, fontWeight: '800', marginTop: 30, textAlign: 'center' }, reviewPhonetic: { color: C.accent2, fontSize: 18, textAlign: 'center', marginTop: 9, marginBottom: 30 }, feedback: { color: C.danger, marginVertical: 8, fontWeight: '700', textAlign: 'center' },
   prompt: { flexDirection: 'row', gap: 9, marginBottom: 10 }, promptDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent, marginTop: 7 }, promptText: { color: C.sub, lineHeight: 20, flex: 1 }, textarea: { minHeight: 260, borderRadius: 16, backgroundColor: C.panel2, borderWidth: 1, borderColor: C.border, color: C.text, padding: 15, textAlignVertical: 'top', marginTop: 10, fontSize: 15, lineHeight: 24 }, saveHint: { color: C.sub, fontSize: 11, marginTop: 10, textAlign: 'right' },
-  drawerShade: { flex: 1, flexDirection: 'row-reverse', backgroundColor: 'rgba(0,0,0,.6)' }, drawerPanel: { width: '82%', backgroundColor: '#0D1118', padding: 20, paddingTop: 54, borderRightWidth: 1, borderRightColor: C.border }, brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12 }, brandDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: C.accent }, brand: { color: C.text, fontSize: 15, fontWeight: '900', letterSpacing: 1.6 }, brandSub: { color: C.sub, fontSize: 10, marginTop: 3 }, drawerLine: { height: 1, backgroundColor: C.border, marginVertical: 22 }, menuItem: { height: 50, borderRadius: 14, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 12, marginBottom: 5 }, menuActive: { backgroundColor: C.panel2 }, menuText: { color: C.sub, fontSize: 14, fontWeight: '600' }, drawerFooter: { backgroundColor: C.panel, padding: 15, borderRadius: 16, borderWidth: 1, borderColor: C.border, marginBottom: 24 }, drawerFooterTitle: { color: C.sub, fontSize: 11 }, drawerPercent: { color: C.text, fontSize: 26, fontWeight: '800', marginTop: 5 }, track: { height: 5, backgroundColor: C.panel2, borderRadius: 4, overflow: 'hidden', marginTop: 10 }, trackFill: { height: '100%', backgroundColor: C.accent },
-  centerShade: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,.72)', padding: 24 }, motivationCard: { width: '100%', backgroundColor: C.panel, borderRadius: 24, borderWidth: 1, borderColor: C.border, padding: 24, alignItems: 'center' }, motivationText: { color: C.text, fontSize: 21, lineHeight: 32, fontWeight: '700', textAlign: 'center', marginVertical: 22 },
-  badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: C.panel2 }, badgeDone: { backgroundColor: '#12251E' }, badgeText: { color: C.sub, fontSize: 11 },
+  drawerShade: { flex: 1, flexDirection: 'row-reverse', backgroundColor: 'rgba(0,0,0,.6)' }, drawerPanel: { backgroundColor: '#090806', borderRightWidth: 1, borderRightColor: C.border }, brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12 }, brandDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: C.accent }, brand: { color: C.text, fontSize: 15, fontWeight: '900', letterSpacing: 1.6 }, brandSub: { color: C.sub, fontSize: 10, marginTop: 3 }, drawerLine: { height: 1, backgroundColor: C.border, marginVertical: 22 }, menuItem: { minHeight: 50, paddingVertical: 12, borderRadius: 14, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 12, marginBottom: 5 }, menuActive: { backgroundColor: C.panel2 }, menuText: { flex: 1, minWidth: 0, color: C.sub, fontSize: 14, fontWeight: '600' }, drawerFooter: { backgroundColor: C.panel, padding: 15, borderRadius: 16, borderWidth: 1, borderColor: C.border, marginBottom: 24 }, drawerFooterTitle: { color: C.sub, fontSize: 11 }, drawerPercent: { color: C.text, fontSize: 26, fontWeight: '800', marginTop: 5 }, track: { height: 5, backgroundColor: C.panel2, borderRadius: 4, overflow: 'hidden', marginTop: 10 }, trackFill: { height: '100%', backgroundColor: C.accent },
+  centerShade: { flex: 1, backgroundColor: 'rgba(0,0,0,.72)' }, motivationCard: { width: '100%', backgroundColor: C.panel, borderRadius: 24, borderWidth: 1, borderColor: C.border, padding: 24, alignItems: 'center' }, motivationText: { color: C.text, fontSize: 21, lineHeight: 32, fontWeight: '700', textAlign: 'center', marginVertical: 22 },
+  quoteBody: { flex: 1, minWidth: 0, paddingRight: 4 },
+  noteAction: { width: 46, height: 46, flexShrink: 0, borderRadius: 14, backgroundColor: C.panel2, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
+  badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: C.panel2 }, badgeDone: { backgroundColor: '#21180B' }, badgeText: { color: C.sub, fontSize: 11 },
 });
+
+
+function useStyles() {
+  const { width, height, fontScale } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const layout = getLayout(width - insets.left - insets.right, height - insets.top - insets.bottom, fontScale);
+  const compactPadding = layout.short ? 12 : layout.padding;
+  return {
+    ...baseStyles,
+    scrollArea: { flex: 1, minHeight: 0 },
+    flexBody: { flex: 1, minWidth: 0 },
+    topbar: { ...baseStyles.topbar, width: '100%' as const, maxWidth: 960, alignSelf: 'center' as const, paddingHorizontal: layout.padding, paddingVertical: layout.short ? 4 : 7 },
+    content: { ...baseStyles.content, flexGrow: 1, width: '100%' as const, maxWidth: 960, alignSelf: 'center' as const, paddingHorizontal: layout.padding, paddingTop: compactPadding, paddingBottom: layout.short ? 16 : 28 },
+    grid: { ...baseStyles.grid, gap: layout.gap, justifyContent: 'flex-start' as const },
+    moduleCard: { ...baseStyles.moduleCard, width: layout.cardWidth, minHeight: layout.short ? 112 : 128, padding: compactPadding },
+    hero: { ...baseStyles.hero, paddingHorizontal: compactPadding, paddingVertical: compactPadding, marginBottom: layout.short ? 16 : 22 },
+    heroTitle: { ...baseStyles.heroTitle, fontSize: layout.short ? 20 : layout.contentWidth < 340 ? 22 : 26, lineHeight: layout.short ? 28 : 36 },
+    heroBottom: { ...baseStyles.heroBottom, marginTop: layout.short ? 10 : 18 },
+    card: { ...baseStyles.card, padding: compactPadding },
+    article: { ...baseStyles.article, padding: compactPadding },
+    quoteCard: { ...baseStyles.quoteCard, padding: compactPadding },
+    reviewCard: { ...baseStyles.reviewCard, padding: compactPadding },
+    actionRow: { flexDirection: layout.stackActions ? 'column' as const : 'row' as const, gap: 10 },
+    textarea: { ...baseStyles.textarea, minHeight: layout.textAreaHeight },
+    drawerPanel: { ...baseStyles.drawerPanel, width: layout.drawerWidth, flexGrow: 0 },
+    drawerContent: { flexGrow: 1, padding: compactPadding },
+    drawerLine: { ...baseStyles.drawerLine, marginVertical: layout.short ? 12 : 22 },
+    drawerFooter: { ...baseStyles.drawerFooter, marginTop: 16, marginBottom: 0 },
+    modalScroll: { width: '100%' as const },
+    modalContent: { flexGrow: 1, justifyContent: 'center' as const, alignItems: 'center' as const, padding: compactPadding },
+    motivationCard: { ...baseStyles.motivationCard, maxWidth: 520, padding: compactPadding },
+  };
+}
